@@ -3,7 +3,8 @@ export interface LoanInput {
   propertyValue: number;
   propertyType: 'first' | 'second' | 'offPlan';
   monthlyIncome: number;
-  existingLoanPayment: number; // 现有贷款月还款额
+  plannedRefinancePayment: number; // 计划转贷的月付款
+  otherLoanPayments: number; // 其他贷款月付款（车贷、消费贷等）
   creditCardLimit: number; // 信用卡额度
   loanType: 'new' | 'refinance' | 'cashout' | 'combined';
   age: number;
@@ -79,17 +80,17 @@ export const calculateLoan = (input: LoanInput): LoanResult => {
 
 // 计算总月债务
 const calculateTotalMonthlyDebt = (input: LoanInput): number => {
-  const { existingLoanPayment, creditCardLimit } = input;
+  const { plannedRefinancePayment, otherLoanPayments, creditCardLimit } = input;
   
   // 信用卡额度的5%折算为最低月还款额
   const creditCardMinPayment = creditCardLimit * 0.05;
   
-  // 总月债务 = 现有贷款月还款额 + 信用卡最低还款额
-  return existingLoanPayment + creditCardMinPayment;
+  // 总月债务 = 计划转贷月付款 + 其他贷款月付款 + 信用卡最低还款额
+  return plannedRefinancePayment + otherLoanPayments + creditCardMinPayment;
 };
 
 const calculateMaxLoanAmount = (input: LoanInput, totalMonthlyDebt: number): number => {
-  const { userType, propertyValue, monthlyIncome, propertyType, loanType, existingLoanBalance, desiredCashout } = input;
+  const { userType, propertyValue, monthlyIncome, propertyType, loanType, existingLoanBalance, desiredCashout, plannedRefinancePayment } = input;
   
   // 根据外籍人士抵押贷款专项计算手册确定最高 LTV
   let maxLoanToValue;
@@ -116,7 +117,9 @@ const calculateMaxLoanAmount = (input: LoanInput, totalMonthlyDebt: number): num
   }
   
   // 月供不超过月收入的50%
-  const maxMonthlyPayment = monthlyIncome * 0.5 - totalMonthlyDebt;
+  // 从总月债务中排除计划转贷月付款，因为这将被新贷款替代
+  const adjustedMonthlyDebt = totalMonthlyDebt - plannedRefinancePayment;
+  const maxMonthlyPayment = monthlyIncome * 0.5 - adjustedMonthlyDebt;
   
   // 根据月供计算最大贷款金额，使用计算得出的贷款期限
   const calculatedTerm = calculateMaxLoanTerm(input);

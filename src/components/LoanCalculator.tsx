@@ -18,7 +18,8 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
     propertyValue: 0,
     propertyType: 'first' as const,
     monthlyIncome: 0,
-    existingLoanPayment: 0,
+    plannedRefinancePayment: 0,
+    otherLoanPayments: 0,
     creditCardLimit: 0,
     loanType: 'new' as const,
     age: 30, // 默认年龄设为30岁
@@ -37,16 +38,6 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
       newLoanRate: '4.50'
     });
   }, []); // 空依赖数组，只在组件挂载时执行一次
-
-  // 添加一个effect，在贷款类型改变时重设利率输入
-  useEffect(() => {
-    // 切换贷款类型时触发
-    if (input.loanType === 'refinance') {
-      // 保持当前输入状态
-    } else {
-      // 非转贷模式下不需要特殊处理
-    }
-  }, [input.loanType]); // 只在贷款类型改变时重设
 
   const handleInputChange = (field: keyof LoanInput, value: any) => {
     setInput(prev => ({
@@ -138,6 +129,17 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
   return (
     <div className="loan-calculator">
       <div className="input-group">
+        <label>{t('userType')}</label>
+        <select
+          value={input.userType}
+          onChange={(e) => handleInputChange('userType', e.target.value)}
+        >
+          <option value="expat">{t('expat')}</option>
+          <option value="local">{t('local')}</option>
+        </select>
+      </div>
+
+      <div className="input-group">
         <label>{t('loanType')}</label>
         <select
           value={input.loanType}
@@ -195,16 +197,27 @@ const LoanCalculator: React.FC<LoanCalculatorProps> = ({ onCalculate }) => {
         />
       </div>
 
+      <div className="input-group">
+        <label>{t('plannedRefinancePayment')}</label>
+        <input
+          type="number"
+          value={input.plannedRefinancePayment}
+          onChange={(e) => handleInputChange('plannedRefinancePayment', Number(e.target.value))}
+          placeholder={t('enterPlannedRefinancePayment')}
+        />
+        <small className="notice">{t('plannedRefinancePaymentNotice')}</small>
+      </div>
+
       <div className="input-group debt-inputs">
         <div className="debt-input-column">
-          <label>{t('existingLoanPayment')}</label>
+          <label>{t('otherLoanPayments')}</label>
           <input
             type="number"
-            value={input.existingLoanPayment}
-            onChange={(e) => handleInputChange('existingLoanPayment', Number(e.target.value))}
-            placeholder={t('enterExistingLoanPayment')}
+            value={input.otherLoanPayments}
+            onChange={(e) => handleInputChange('otherLoanPayments', Number(e.target.value))}
+            placeholder={t('enterOtherLoanPayments')}
           />
-          <small className="notice">{t('existingLoanPaymentNotice')}</small>
+          <small className="notice">{t('otherLoanPaymentsNotice')}</small>
         </div>
         
         <div className="debt-input-column">
